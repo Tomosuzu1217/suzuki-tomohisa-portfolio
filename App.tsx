@@ -5,10 +5,12 @@ import { AdminEditor } from './components/AdminEditor';
 import { LiquidText } from './components/LiquidText';
 import { PageTransition } from './components/PageTransition';
 import { ProjectShowcase, FeaturedProjects } from './components/ProjectShowcase';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { Navigation } from './components/Navigation';
 import { SiteContent } from './types';
-import { DEFAULT_CONTENT, ADMIN_PASSWORD } from './constants';
+import { DEFAULT_CONTENT, NOISE_TEXTURE_SVG } from './constants';
 import { useCursorTracker } from './hooks/useCursorTracker';
-import { Lock, Settings, ArrowDown, ExternalLink, LayoutDashboard } from 'lucide-react';
+import { ArrowDown, ExternalLink, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // --- ANIMATION COMPONENTS ---
@@ -74,7 +76,9 @@ const ParallaxImage: React.FC<{ src: string; alt?: string; className?: string }>
           <img src={src} alt="" className="w-full h-full object-cover sepia hue-rotate-[50deg] contrast-150 opacity-50" />
         </motion.div>
       </div>
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay group-hover:opacity-40 transition-opacity"></div>
+      <div className="absolute inset-0 opacity-20 mix-blend-overlay group-hover:opacity-40 transition-opacity pointer-events-none"
+        style={{ backgroundImage: `url("${NOISE_TEXTURE_SVG}")` }}
+      />
       <div className="absolute inset-4 border border-[#C5A265]/30 pointer-events-none z-20 group-hover:border-[#C5A265]/60 transition-colors duration-300"></div>
     </div>
   );
@@ -143,7 +147,7 @@ const SectionIndicator: React.FC = () => {
           {SECTION_NAMES[activeSection]}
         </motion.span>
       </AnimatePresence>
-      <span className="text-[10px] font-mono tracking-widest text-white/50">
+      <span className="text-[10px] font-mono tracking-widest text-white/60">
         <span className="text-[#C5A265]">{String(activeSection + 1).padStart(2, '0')}</span>
         <span className="mx-1">/</span>
         {String(SECTION_NAMES.length).padStart(2, '0')}
@@ -190,7 +194,7 @@ const MagneticButton: React.FC<{ children: React.ReactNode; className?: string; 
   );
 };
 
-// --- FLOATING GOLD PARTICLES ---
+// --- FLOATING GOLD PARTICLES (optimized) ---
 const FloatingParticles: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -203,7 +207,6 @@ const FloatingParticles: React.FC = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
-    // Skip on mobile for performance
     if (window.innerWidth < 768) return;
 
     let animationId: number;
@@ -244,7 +247,12 @@ const FloatingParticles: React.FC = () => {
         else if (lifeRatio > 0.8) p.opacity = (1 - lifeRatio) / 0.2;
         else p.opacity = 1;
 
-        if (p.life >= p.maxLife || p.y < -10) { particles.splice(i, 1); continue; }
+        if (p.life >= p.maxLife || p.y < -10) {
+          // Swap-and-pop instead of splice for O(1)
+          particles[i] = particles[particles.length - 1];
+          particles.pop();
+          continue;
+        }
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -315,33 +323,20 @@ interface StickySectionProps {
   justify?: 'start' | 'center' | 'end' | 'between';
   bgColor?: string;
   isLast?: boolean;
+  id?: string;
 }
 
-// Alternating subtle background shades so cards are visually distinguishable
 const CARD_COLORS = [
-  '#141414', // 1 HERO
-  '#161616', // 2 ABOUT
-  '#141414', // 3 SERVICES
-  '#171717', // 4 PHILOSOPHY
-  '#000000', // 5 PERSPECTIVE
-  '#161616', // 6 SKILLS
-  '#141414', // 7 PROJECTS
-  '#171717', // 8 PERSONALITY
-  '#141414', // 9 FOOTER
+  '#141414', '#161616', '#141414', '#171717', '#000000',
+  '#161616', '#141414', '#171717', '#141414',
 ];
 
-const CARD_OFFSET = 32; // px per card tab
+const CARD_OFFSET = 32;
 
 const StickySection: React.FC<StickySectionProps> = ({
-  children,
-  className = "",
-  index,
-  justify = 'center',
-  bgColor,
-  isLast = false
+  children, className = "", index, justify = 'center',
+  bgColor, isLast = false, id
 }) => {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
   const justifyClass = {
     start: 'justify-start',
     center: 'justify-center',
@@ -354,7 +349,7 @@ const StickySection: React.FC<StickySectionProps> = ({
 
   return (
     <div
-      ref={sectionRef}
+      id={id}
       className={`${isLast ? 'relative' : 'sticky'} isolate w-full flex flex-col ${justifyClass} ${className}`}
       style={{
         zIndex: index * 10 + 10,
@@ -364,24 +359,18 @@ const StickySection: React.FC<StickySectionProps> = ({
         boxShadow: `0 -4px 20px rgba(0,0,0,0.9), inset 0 1px 0 rgba(197,162,101,0.25), inset 0 2px 0 rgba(255,255,255,0.04)`
       }}
     >
-      {/* Noise texture */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+        style={{ backgroundImage: `url("${NOISE_TEXTURE_SVG}")` }}
       />
-
-      {/* Card top edge — gold line + depth gradient */}
       <div className="absolute top-0 left-0 w-full z-50 pointer-events-none">
         <div className="h-[1px] w-full bg-[#C5A265]/40" />
         <div className="h-8 w-full bg-gradient-to-b from-white/[0.03] to-transparent" />
       </div>
-
-      {/* Section number label on card edge tab */}
       {!isLast && (
         <div className="absolute top-1.5 right-3 md:right-6 text-[8px] font-mono tracking-[0.3em] text-[#C5A265]/60 z-50 select-none">
           {String(index).padStart(2, '0')}
         </div>
       )}
-
       {children}
     </div>
   );
@@ -392,8 +381,6 @@ const App: React.FC = () => {
   const [content, setContent] = useState<SiteContent>(DEFAULT_CONTENT);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showPasswordInput, setShowPasswordInput] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   // Name Animation
@@ -429,17 +416,21 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
+  // Admin auth via environment variable or fallback
+  const handleAdminAccess = useCallback(() => {
+    const envPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+    if (!envPassword) {
+      // No env password set — open admin directly (dev mode or no protection)
       setIsAuthenticated(true);
       setIsAdminOpen(true);
-      setShowPasswordInput(false);
-      setPasswordInput("");
-    } else {
-      alert("Invalid password");
+      return;
     }
-  };
+    const input = prompt("管理者パスワードを入力してください:");
+    if (input === envPassword) {
+      setIsAuthenticated(true);
+      setIsAdminOpen(true);
+    }
+  }, []);
 
   const handleSave = (newContent: SiteContent) => {
     setContent(newContent);
@@ -460,17 +451,22 @@ const App: React.FC = () => {
         {isLoading && <PageTransition key="loader" />}
       </AnimatePresence>
 
-      <WaterBackground />
+      <ErrorBoundary>
+        <WaterBackground />
+      </ErrorBoundary>
       <FloatingParticles />
       <ScrollProgressBar />
       <SectionIndicator />
+      <Navigation />
 
-      {/* Spotlight — desktop only */}
+      {/* Spotlight — desktop only, reduced intensity */}
       <div
-        className="fixed inset-0 z-[20] pointer-events-none backdrop-grayscale transition-all duration-300 ease-out hidden md:block"
+        className="fixed inset-0 z-[20] pointer-events-none transition-all duration-300 ease-out hidden md:block"
         style={{
           WebkitMaskImage: 'radial-gradient(circle 250px at var(--x, 50%) var(--y, 50%), transparent 0%, black 100%)',
-          maskImage: 'radial-gradient(circle 250px at var(--x, 50%) var(--y, 50%), transparent 0%, black 100%)'
+          maskImage: 'radial-gradient(circle 250px at var(--x, 50%) var(--y, 50%), transparent 0%, black 100%)',
+          backdropFilter: 'grayscale(0.3)',
+          WebkitBackdropFilter: 'grayscale(0.3)',
         }}
       />
       {/* Custom cursor — desktop only */}
@@ -487,22 +483,12 @@ const App: React.FC = () => {
 
       {/* HEADER */}
       <header className="fixed top-0 w-full z-50 px-4 py-4 md:px-12 md:py-8 flex justify-between items-start pointer-events-none mix-blend-difference">
-        <div className="pointer-events-auto md:cursor-none">
-          <RevealText gold delay={3.0}>
+        <div className="pointer-events-auto">
+          <RevealText gold delay={0.3}>
             <h1 className="text-[10px] md:text-xs font-bold tracking-[0.2em] text-[#C5A265]">SUZUKI TOMOHISA</h1>
             <div className="h-[1px] w-8 bg-[#C5A265] my-1.5 md:my-2"></div>
             <p className="text-[9px] md:text-[10px] text-white/70 tracking-widest">PORTFOLIO</p>
           </RevealText>
-        </div>
-        <div className="pointer-events-auto md:cursor-none">
-          <button
-            onClick={() => setShowPasswordInput(true)}
-            className="group flex items-center gap-3 text-[10px] tracking-[0.2em] text-white/70 hover:text-[#C5A265] transition-colors"
-          >
-            <span className="hidden md:inline group-hover:opacity-0 transition-opacity absolute right-8">MENU</span>
-            <span className="hidden md:inline opacity-0 group-hover:opacity-100 transition-opacity absolute right-8 text-[#C5A265]">EDIT</span>
-            <Settings size={14} className="group-hover:rotate-90 transition-transform duration-700" />
-          </button>
         </div>
       </header>
 
@@ -511,20 +497,21 @@ const App: React.FC = () => {
         <div className="h-full w-[1px] bg-white/10"></div>
       </div>
 
-      {/* cursor-none only on desktop */}
-      <main className="relative w-full md:cursor-none">
+      <main className="relative w-full">
 
         {/* ========== 1. HERO ========== */}
-        <StickySection index={1} className="pt-20 pb-8 md:py-24">
+        <StickySection index={1} className="pt-20 pb-8 md:py-24" id="hero">
           <section className="px-5 md:px-12 max-w-7xl mx-auto w-full md:pl-32 pb-16 md:pb-24">
-            <RevealText delay={3.1}>
+            <RevealText delay={0.4}>
               <p className="font-serif text-sm md:text-base text-[#C5A265] tracking-wide mb-4 md:mb-6">
                 {content.hero.subtitle}
               </p>
             </RevealText>
 
             <div className="relative h-[18vh] md:h-[30vh] flex items-center z-30">
-              <WaterBackgroundHero />
+              <ErrorBoundary fallback={<div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#141414] to-[#1a1a1a]" />}>
+                <WaterBackgroundHero />
+              </ErrorBoundary>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={nameIndex}
@@ -542,9 +529,9 @@ const App: React.FC = () => {
             </div>
 
             <div className="mt-6 md:mt-16 max-w-xl">
-              <RevealSection delay={3.5} className="h-[1px] w-24 bg-[#C5A265] mb-4 md:mb-6"><div /></RevealSection>
-              <RevealText delay={3.6}>
-                <p className="text-sm md:text-base text-white/85 leading-relaxed md:leading-loose font-serif tracking-wide">
+              <RevealSection delay={0.6} className="h-[1px] w-24 bg-[#C5A265] mb-4 md:mb-6"><div /></RevealSection>
+              <RevealText delay={0.7}>
+                <p className="text-sm md:text-base text-white/90 leading-relaxed md:leading-loose font-serif tracking-wide">
                   {content.hero.title}
                 </p>
               </RevealText>
@@ -553,7 +540,7 @@ const App: React.FC = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 4.0, duration: 2 }}
+              transition={{ delay: 1.2, duration: 2 }}
               className="absolute bottom-6 md:bottom-12 right-5 md:right-12 flex flex-col items-center gap-3 z-30"
             >
               <span className="text-[10px] tracking-widest text-[#C5A265]">SCROLL</span>
@@ -569,7 +556,7 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 2. INTRO / ABOUT ========== */}
-        <StickySection index={2}>
+        <StickySection index={2} id="about">
           <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-12 md:py-24 pb-16 md:pb-48">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-20 items-center w-full">
               <div className="md:col-span-6 relative">
@@ -620,7 +607,7 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 3. SERVICES ========== */}
-        <StickySection index={3} justify="start">
+        <StickySection index={3} justify="start" id="services">
           <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-12 md:py-24 pb-16 md:pb-48 flex flex-col justify-center" style={{ minHeight: 'inherit' }}>
             <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between border-b border-white/20 pb-4 md:pb-6 mb-8 md:mb-16 relative z-30 gap-2 md:gap-4">
               <RevealText>
@@ -659,7 +646,7 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 4. PHILOSOPHY ========== */}
-        <StickySection index={4} justify="start">
+        <StickySection index={4} justify="start" id="philosophy">
           <section className="px-5 md:px-12 w-full max-w-6xl mx-auto relative z-10 py-12 md:py-24 pb-16 md:pb-48 flex flex-col justify-center" style={{ minHeight: 'inherit' }}>
             <div className="flex flex-col items-center gap-10 md:gap-20">
               <RevealText>
@@ -683,7 +670,7 @@ const App: React.FC = () => {
 
               <RevealSection>
                 <div className="text-center max-w-2xl mx-auto border-t border-b border-[#C5A265]/30 py-5 md:py-8">
-                  <p className="text-[13px] md:text-base font-serif tracking-widest text-white/85 leading-loose">
+                  <p className="text-[13px] md:text-base font-serif tracking-widest text-white/90 leading-loose">
                     {content.stance.conclusion}
                   </p>
                 </div>
@@ -693,7 +680,7 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 5. PERSPECTIVE ========== */}
-        <StickySection index={5} bgColor="#000000">
+        <StickySection index={5} bgColor="#000000" id="perspective">
           <section className="w-full flex-1 relative overflow-hidden flex items-center justify-center bg-black" style={{ minHeight: 'inherit' }}>
             <div className="absolute inset-0 z-0 bg-black">
               <div className="absolute inset-0 opacity-60">
@@ -703,12 +690,19 @@ const App: React.FC = () => {
             <div className="absolute inset-0 z-10 flex items-center overflow-hidden pointer-events-none">
               <MarqueeText text="DATA SCIENCE   DECISION DESIGN   ANALYSIS   STRATEGY" />
             </div>
-            <div className="relative z-30">
+            <div className="relative z-30 max-w-3xl mx-auto px-5 text-center">
               <RevealSection>
                 <div className="border border-white/30 p-5 md:p-12 backdrop-blur-sm bg-black/50">
-                  <h2 className="text-xl md:text-5xl font-serif text-white tracking-widest">
+                  <h2 className="text-xl md:text-5xl font-serif text-white tracking-widest mb-4 md:mb-6">
                     PERSPECTIVE
                   </h2>
+                  <div className="space-y-3 md:space-y-4">
+                    {content.copy.sub.map((line, i) => (
+                      <p key={i} className="text-xs md:text-sm text-white/80 font-serif leading-relaxed tracking-wide">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               </RevealSection>
             </div>
@@ -716,7 +710,7 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 6. SKILLS & VALUES ========== */}
-        <StickySection index={6}>
+        <StickySection index={6} id="skills">
           <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-12 md:py-24 pb-16 md:pb-48">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-24 w-full">
               <div>
@@ -756,14 +750,23 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 7. PROJECTS ========== */}
-        <StickySection index={7} justify="center">
+        <StickySection index={7} justify="center" id="projects">
           <div className="w-full min-h-[100dvh] flex flex-col items-center justify-center bg-[#141414] overflow-hidden">
             <ProjectShowcase />
+            <div className="mt-4 mb-8">
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-[#C5A265]/40 text-[#C5A265] text-xs tracking-[0.2em] hover:bg-[#C5A265] hover:text-black transition-all duration-300"
+              >
+                <LayoutDashboard size={14} />
+                全プロジェクトを見る
+              </Link>
+            </div>
           </div>
         </StickySection>
 
         {/* ========== 8. PERSONALITY ========== */}
-        <StickySection index={8}>
+        <StickySection index={8} id="personality">
           <section className="px-4 md:px-12 w-full max-w-6xl mx-auto flex items-center justify-center py-12 md:py-24 bg-[#171717]" style={{ minHeight: 'inherit' }}>
             <div className="border border-[#C5A265]/40 bg-[#1a1a1a] p-5 md:p-20 relative w-full">
               <div className="absolute top-0 left-0 w-10 h-10 md:w-20 md:h-20 border-t-2 border-l-2 border-[#C5A265] z-30"></div>
@@ -794,7 +797,7 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 9. FOOTER ========== */}
-        <StickySection index={9} justify="between" isLast>
+        <StickySection index={9} justify="between" isLast id="contact">
           <div className="w-full min-h-[100dvh] flex flex-col justify-between py-12 md:py-24 px-5 md:px-12 bg-[#141414]">
             <div className="flex-1 flex flex-col items-center justify-center z-10">
               <RevealSection>
@@ -826,12 +829,12 @@ const App: React.FC = () => {
             <div className="w-full flex flex-col justify-end items-center pt-8 md:pt-16">
               <RevealSection delay={0.4} className="w-full flex flex-col items-center">
                 {content.footer.message && (
-                  <p className="text-xs md:text-sm text-white/65 text-center mb-5 md:mb-8 whitespace-pre-line font-serif leading-loose max-w-2xl px-2">
+                  <p className="text-xs md:text-sm text-white/70 text-center mb-5 md:mb-8 whitespace-pre-line font-serif leading-loose max-w-2xl px-2">
                     {content.footer.message}
                   </p>
                 )}
                 <div className="w-full h-[1px] bg-white/15 max-w-7xl mb-5 md:mb-8"></div>
-                <span className="text-[9px] md:text-[10px] font-mono tracking-widest text-white/50">© {new Date().getFullYear()} SUZUKI TOMOHISA</span>
+                <span className="text-[9px] md:text-[10px] font-mono tracking-widest text-white/60">&copy; {new Date().getFullYear()} SUZUKI TOMOHISA</span>
               </RevealSection>
             </div>
           </div>
@@ -839,43 +842,8 @@ const App: React.FC = () => {
 
       </main>
 
-      {/* AUTH MODAL */}
-      <AnimatePresence>
-        {showPasswordInput && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-auto"
-          >
-            <form onSubmit={handleLogin} className="w-full max-w-sm space-y-8 md:space-y-12 text-center relative border border-[#C5A265]/40 p-8 md:p-12 bg-[#141414]">
-              <button type="button" onClick={() => setShowPasswordInput(false)} className="absolute top-3 right-3 md:top-4 md:right-4 text-white/60 hover:text-[#C5A265] transition-colors text-[10px] tracking-widest">CLOSE</button>
-
-              <div className="space-y-3 md:space-y-4">
-                <div className="w-12 h-12 border border-[#C5A265] rounded-full mx-auto flex items-center justify-center text-[#C5A265]">
-                  <Lock size={16} />
-                </div>
-                <h3 className="text-[#C5A265] text-xs font-mono tracking-[0.2em]">SECURITY CHECK</h3>
-              </div>
-
-              <div className="relative group">
-                <input
-                  type="password"
-                  value={passwordInput}
-                  onChange={e => setPasswordInput(e.target.value)}
-                  className="w-full bg-transparent border-b border-[#C5A265]/60 text-white text-center text-2xl md:text-3xl py-3 md:py-4 focus:border-[#C5A265] focus:outline-none transition-colors font-serif placeholder-white/30"
-                  placeholder="••••••••"
-                  autoFocus
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-[#C5A265] text-black text-xs font-bold tracking-[0.2em] py-3 md:py-4 hover:bg-white transition-colors">
-                ENTER SYSTEM
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ADMIN (hidden access via keyboard shortcut: Ctrl+Shift+E) */}
+      <AdminKeyboardShortcut onTrigger={handleAdminAccess} />
 
       {/* ADMIN EDITOR */}
       {isAdminOpen && isAuthenticated && (
@@ -889,6 +857,22 @@ const App: React.FC = () => {
       )}
     </div>
   );
+};
+
+// Hidden admin access via keyboard shortcut
+const AdminKeyboardShortcut: React.FC<{ onTrigger: () => void }> = ({ onTrigger }) => {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+        e.preventDefault();
+        onTrigger();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onTrigger]);
+
+  return null;
 };
 
 export default App;

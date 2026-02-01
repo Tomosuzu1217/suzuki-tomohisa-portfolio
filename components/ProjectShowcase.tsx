@@ -233,14 +233,14 @@ export const ImageSlider: React.FC<{ images: string[]; autoPlay?: boolean }> = (
                 <>
                     <button
                         onClick={goToPrevious}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#C5A265]"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 opacity-70 md:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#C5A265]"
                         aria-label="Previous"
                     >
                         <ChevronLeft size={20} />
                     </button>
                     <button
                         onClick={goToNext}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#C5A265]"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 opacity-70 md:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#C5A265]"
                         aria-label="Next"
                     >
                         <ChevronRight size={20} />

@@ -1,17 +1,17 @@
 /*
  * -------------------------------------------------------------------------
  * HOW TO UPDATE CONTENT:
- * 1. Go to the site, click "MENU" -> "EDIT".
- * 2. Login with the admin password.
- * 3. Edit text and upload images in the CMS.
- * 4. Click "COPY JSON" in the top right.
- * 5. Paste the copied code below, replacing "export const DEFAULT_CONTENT = ...".
+ * 1. Go to the site, press Ctrl+Shift+E to open the editor.
+ * 2. Edit text and upload images in the CMS.
+ * 3. Click "COPY JSON" in the top right.
+ * 4. Paste the copied code below, replacing "export const DEFAULT_CONTENT = ...".
  * -------------------------------------------------------------------------
  */
 
 import { SiteContent } from './types';
 
-export const ADMIN_PASSWORD = "12171217Vv";
+// Noise texture as inline data URI (shared across components)
+export const NOISE_TEXTURE_SVG = "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
 
 export const DEFAULT_IMAGES = [
   "https://picsum.photos/id/1/1920/1080",
@@ -40,7 +40,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       "生成AI（LLM）を活用した実務向けアプリケーションや仕組みづくり",
       "人や組織の「感覚・経験・暗黙知」を構造・指標・言葉に翻訳すること"
     ],
-    note: "「AIを入れること」よりも、“何を決めたいのかを整理すること”を大切にしています。"
+    note: "「AIを入れること」よりも、\u201C何を決めたいのかを整理すること\u201Dを大切にしています。"
   },
   stance: {
     title: "考え方のスタンス",
@@ -65,7 +65,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     items: [
       "断言しすぎない",
       "でも、曖昧なまま放置しない",
-      "失敗したときの“やめどき”を先に決める",
+      "失敗したときの\u201Cやめどき\u201Dを先に決める",
       "後悔しにくい選択肢を増やすことが、良い意思決定につながると考えています。"
     ]
   },

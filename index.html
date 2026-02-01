@@ -4,10 +4,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <title>Suzukitomohisa | Portfolio</title>
+  <title>鈴木智久 | データサイエンティスト ポートフォリオ</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="データサイエンティスト 鈴木智久のポートフォリオサイト。AIとデータ分析を活用した意思決定支援・業務設計プロジェクトを公開。" />
+  <meta name="author" content="Suzuki Tomohisa" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="鈴木智久 | データサイエンティスト ポートフォリオ" />
+  <meta property="og:description" content="データサイエンス × 意思決定デザイン。AIとデータ分析を活用したプロジェクトを公開しています。" />
+  <meta property="og:site_name" content="Suzuki Tomohisa Portfolio" />
+  <meta property="og:locale" content="ja_JP" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="鈴木智久 | データサイエンティスト ポートフォリオ" />
+  <meta name="twitter:description" content="データサイエンス × 意思決定デザイン。AIとデータ分析を活用したプロジェクトを公開しています。" />
 
   <!-- PWA Meta Tags -->
-  <meta name="description" content="データサイエンティスト 鈴木智久のポートフォリオサイト。AIとデータ分析を活用したプロジェクトを公開。" />
   <meta name="theme-color" content="#141414" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -21,61 +36,25 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background-color: #141414;
-      color: #e5e5e5;
-      overflow-x: hidden;
-    }
+    rel="stylesheet" />
 
-    /* ポートフォリオページのみカスタムカーソル（App.tsxで適用） */
-    .cursor-none-custom {
-      cursor: none;
-    }
-
-    .font-serif {
-      font-family: 'Shippori Mincho', serif;
-    }
-
-    .writing-vertical-rl {
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #141414;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #333;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    .stroke-text {
-      -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
-    }
-
-    /* Utilities */
-    .glass-panel {
-      background: rgba(20, 20, 20, 0.6);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-  </style>
-  <link rel="stylesheet" href="/index.css">
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "鈴木智久",
+    "alternateName": "Suzuki Tomohisa",
+    "jobTitle": "データサイエンティスト",
+    "description": "AI・データ分析・生成AIを活用した意思決定支援や業務設計",
+    "knowsAbout": ["Data Science", "AI", "Machine Learning", "Decision Design"]
+  }
+  </script>
 
   <!-- GitHub Pages SPA redirect handler -->
   <script>

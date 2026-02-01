@@ -219,8 +219,7 @@ const Dashboard: React.FC = () => {
     return (
         <div
             ref={containerRef}
-            className="min-h-screen bg-[#141414] text-white cursor-none"
-            style={{ cursor: 'none' }}
+            className="min-h-screen bg-[#141414] text-white"
         >
             {/* Custom Cursor */}
             <div
