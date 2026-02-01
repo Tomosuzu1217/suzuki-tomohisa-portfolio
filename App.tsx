@@ -335,6 +335,8 @@ const CARD_COLORS = [
 
 const CARD_OFFSET = 8;
 
+const SECTION_COUNT = 9;
+
 const StickySection: React.FC<StickySectionProps> = ({
   children, className = "", index, justify = 'center',
   bgColor, id
@@ -346,7 +348,10 @@ const StickySection: React.FC<StickySectionProps> = ({
     between: 'justify-between'
   }[justify];
 
-  const offset = (index - 1) * CARD_OFFSET;
+  // Last section covers the full viewport (top:0) with highest z-index
+  // to hide all tab unsticking artifacts from earlier sections
+  const isLast = index === SECTION_COUNT;
+  const offset = isLast ? 0 : (index - 1) * CARD_OFFSET;
   const bg = bgColor || CARD_COLORS[index - 1] || '#141414';
 
   return (
@@ -354,10 +359,11 @@ const StickySection: React.FC<StickySectionProps> = ({
       id={id}
       className={`sticky isolate w-full flex flex-col ${justifyClass} ${className}`}
       style={{
-        zIndex: index + 1,
+        zIndex: isLast ? 20 : index + 1,
         backgroundColor: bg,
         top: `${offset}px`,
-        minHeight: `calc(100dvh - ${offset}px)`,
+        height: `calc(100dvh - ${offset}px)`,
+        overflow: 'clip',
         boxShadow: `0 -4px 20px rgba(0,0,0,0.9), inset 0 1px 0 rgba(197,162,101,0.25), inset 0 2px 0 rgba(255,255,255,0.04)`
       }}
     >
@@ -564,8 +570,8 @@ const App: React.FC = () => {
 
         {/* ========== 2. INTRO / ABOUT ========== */}
         <StickySection index={2} id="about">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-12 md:py-24">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-20 items-center w-full">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-8 md:py-12">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-16 items-center w-full">
               <div className="md:col-span-6 relative">
                 <RevealSection zIndex="z-0">
                   <div className="aspect-[3/4] md:aspect-[4/5] w-full max-w-sm md:max-w-none mx-auto relative border border-[#C5A265]/30 p-1.5 md:p-2">
@@ -582,27 +588,27 @@ const App: React.FC = () => {
               </div>
 
               <div className="md:col-span-6 flex flex-col justify-center">
-                <RevealText className="mb-5 md:mb-8" gold>
-                  <span className="text-xs font-mono tracking-widest block mb-3 md:mb-4 border-l-2 border-[#C5A265] pl-4">ABOUT ME</span>
+                <RevealText className="mb-3 md:mb-5" gold>
+                  <span className="text-xs font-mono tracking-widest block mb-2 md:mb-3 border-l-2 border-[#C5A265] pl-4">ABOUT ME</span>
                 </RevealText>
-                <RevealText className="mb-6 md:mb-10">
+                <RevealText className="mb-4 md:mb-6">
                   <h2 className="text-xl md:text-4xl font-serif font-medium leading-tight text-white">{content.intro.title}</h2>
                 </RevealText>
 
-                <div className="space-y-5 md:space-y-8">
+                <div className="space-y-3 md:space-y-5">
                   <RevealSection delay={0.2}>
                     <div className="text-[13px] md:text-base text-white/80 leading-loose whitespace-pre-line">
                       {content.intro.body}
                     </div>
                   </RevealSection>
-                  <RevealSection delay={0.4} className="bg-[#C5A265]/[0.07] p-4 md:p-8 border-l-2 border-[#C5A265]">
+                  <RevealSection delay={0.4} className="bg-[#C5A265]/[0.07] p-3 md:p-5 border-l-2 border-[#C5A265]">
                     <p className="text-sm md:text-xl font-serif text-[#C5A265]">
                       {content.intro.highlight}
                     </p>
                   </RevealSection>
 
                   <RevealSection delay={0.6}>
-                    <div className="pt-5 md:pt-8 border-t border-white/20">
+                    <div className="pt-3 md:pt-5 border-t border-white/20">
                       <p className="text-xs font-mono tracking-widest text-[#C5A265] mb-4">FEATURED PROJECTS</p>
                       <FeaturedProjects />
                     </div>
@@ -615,8 +621,8 @@ const App: React.FC = () => {
 
         {/* ========== 3. SERVICES ========== */}
         <StickySection index={3} justify="start" id="services">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-12 md:py-24 flex flex-col justify-center">
-            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between border-b border-white/20 pb-4 md:pb-6 mb-8 md:mb-16 relative z-30 gap-2 md:gap-4">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-8 md:py-16 flex flex-col justify-center">
+            <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between border-b border-white/20 pb-3 md:pb-4 mb-6 md:mb-10 relative z-30 gap-2 md:gap-4">
               <RevealText>
                 <h2 className="text-xl md:text-5xl font-serif text-white">{content.whatIDo.title}</h2>
               </RevealText>
@@ -628,7 +634,7 @@ const App: React.FC = () => {
             <div className="space-y-[1px] bg-white/10 relative z-30">
               {content.whatIDo.items.map((item, i) => (
                 <RevealSection key={i} delay={i * 0.1} className="bg-[#1a1a1a] group hover:bg-[#222] transition-colors duration-500">
-                  <div className="p-4 md:p-12 flex flex-row gap-3 md:gap-8 items-start md:items-center relative overflow-hidden">
+                  <div className="p-4 md:p-8 flex flex-row gap-3 md:gap-8 items-start md:items-center relative overflow-hidden">
                     <div className="text-[#C5A265] font-serif text-base md:text-2xl opacity-60 group-hover:opacity-100 transition-opacity w-8 md:w-12 shrink-0 pt-0.5 md:pt-0">
                       0{i + 1}
                     </div>
@@ -654,7 +660,7 @@ const App: React.FC = () => {
 
         {/* ========== 4. PHILOSOPHY ========== */}
         <StickySection index={4} justify="start" id="philosophy">
-          <section className="px-5 md:px-12 w-full max-w-6xl mx-auto relative z-10 py-12 md:py-24 flex flex-col justify-center">
+          <section className="px-5 md:px-12 w-full max-w-6xl mx-auto relative z-10 py-8 md:py-16 flex flex-col justify-center">
             <div className="flex flex-col items-center gap-10 md:gap-20">
               <RevealText>
                 <div className="flex flex-col items-center gap-3 md:gap-4">
@@ -718,8 +724,8 @@ const App: React.FC = () => {
 
         {/* ========== 6. SKILLS & VALUES ========== */}
         <StickySection index={6} id="skills">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-12 md:py-24">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-24 w-full">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-8 md:py-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 w-full">
               <div>
                 <RevealSection className="border-b-2 border-[#C5A265] mb-5 md:mb-8 pb-3 md:pb-4 flex justify-between items-end">
                   <h2 className="text-base md:text-xl font-serif text-white">{content.skills.title}</h2>
@@ -758,7 +764,7 @@ const App: React.FC = () => {
 
         {/* ========== 7. PROJECTS ========== */}
         <StickySection index={7} justify="center" id="projects">
-          <div className="w-full flex flex-col items-center justify-center py-12 md:py-24 bg-[#141414]">
+          <div className="w-full h-full flex flex-col items-center justify-center py-6 md:py-10 bg-[#141414]">
             <ProjectShowcase />
             <div className="mt-4 mb-8">
               <Link
@@ -774,7 +780,7 @@ const App: React.FC = () => {
 
         {/* ========== 8. PERSONALITY ========== */}
         <StickySection index={8} id="personality">
-          <section className="px-4 md:px-12 w-full max-w-6xl mx-auto flex items-center justify-center py-12 md:py-24 bg-[#171717]">
+          <section className="px-4 md:px-12 w-full max-w-6xl mx-auto flex items-center justify-center py-8 md:py-16 bg-[#171717]">
             <div className="border border-[#C5A265]/40 bg-[#1a1a1a] p-5 md:p-20 relative w-full">
               <div className="absolute top-0 left-0 w-10 h-10 md:w-20 md:h-20 border-t-2 border-l-2 border-[#C5A265] z-30"></div>
               <div className="absolute bottom-0 right-0 w-10 h-10 md:w-20 md:h-20 border-b-2 border-r-2 border-[#C5A265] z-30"></div>
@@ -805,7 +811,7 @@ const App: React.FC = () => {
 
         {/* ========== 9. FOOTER ========== */}
         <StickySection index={9} justify="between" id="contact">
-          <div className="w-full flex flex-col justify-between py-12 md:py-24 px-5 md:px-12 bg-[#141414]">
+          <div className="w-full h-full flex flex-col justify-between py-12 md:py-24 px-5 md:px-12 bg-[#141414]">
             <div className="flex-1 flex flex-col items-center justify-center z-10">
               <RevealSection>
                 <h2 className="text-base md:text-2xl lg:text-4xl font-serif font-medium leading-relaxed mb-6 md:mb-12 text-white tracking-wide text-center whitespace-nowrap">

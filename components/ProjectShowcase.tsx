@@ -401,7 +401,7 @@ export const FeaturedProjects: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
                 {[1, 2, 3].map(i => (
                     <div key={i} className="aspect-video bg-[#1a1a1a] animate-pulse" />
                 ))}
@@ -410,9 +410,11 @@ export const FeaturedProjects: React.FC = () => {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {projects.map((project) => (
-                <CompactProjectCard key={project.id} project={project} />
+        <div className="grid grid-cols-3 gap-3">
+            {projects.map((project, i) => (
+                <div key={project.id} className={i > 0 ? 'hidden md:block' : ''}>
+                    <CompactProjectCard project={project} />
+                </div>
             ))}
         </div>
     );
