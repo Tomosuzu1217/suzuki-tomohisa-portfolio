@@ -322,7 +322,6 @@ interface StickySectionProps {
   index: number;
   justify?: 'start' | 'center' | 'end' | 'between';
   bgColor?: string;
-  isLast?: boolean;
   id?: string;
 }
 
@@ -335,7 +334,7 @@ const CARD_OFFSET = 8;
 
 const StickySection: React.FC<StickySectionProps> = ({
   children, className = "", index, justify = 'center',
-  bgColor, isLast = false, id
+  bgColor, id
 }) => {
   const justifyClass = {
     start: 'justify-start',
@@ -350,12 +349,12 @@ const StickySection: React.FC<StickySectionProps> = ({
   return (
     <div
       id={id}
-      className={`${isLast ? 'relative' : 'sticky'} isolate w-full flex flex-col ${justifyClass} ${className}`}
+      className={`sticky isolate w-full flex flex-col ${justifyClass} overflow-hidden ${className}`}
       style={{
         zIndex: index + 1,
         backgroundColor: bg,
-        top: isLast ? 'auto' : `${offset}px`,
-        minHeight: isLast ? '100dvh' : `calc(100dvh - ${offset}px)`,
+        top: `${offset}px`,
+        height: `calc(100dvh - ${offset}px)`,
         boxShadow: `0 -4px 20px rgba(0,0,0,0.9), inset 0 1px 0 rgba(197,162,101,0.25), inset 0 2px 0 rgba(255,255,255,0.04)`
       }}
     >
@@ -404,7 +403,15 @@ const App: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setContent({ ...DEFAULT_CONTENT, ...parsed });
+        // Deep merge: spread each section individually so DEFAULT_CONTENT fields are preserved
+        // unless explicitly overridden by saved data
+        const merged = { ...DEFAULT_CONTENT };
+        for (const key of Object.keys(DEFAULT_CONTENT) as Array<keyof SiteContent>) {
+          if (parsed[key]) {
+            merged[key] = { ...DEFAULT_CONTENT[key], ...parsed[key] } as any;
+          }
+        }
+        setContent(merged);
       } catch (e) {
         console.error("Failed to parse saved content", e);
       }
@@ -554,7 +561,7 @@ const App: React.FC = () => {
 
         {/* ========== 2. INTRO / ABOUT ========== */}
         <StickySection index={2} id="about">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-12 md:py-24 pb-16 md:pb-48">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-6 md:py-12 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-20 items-center w-full">
               <div className="md:col-span-6 relative">
                 <RevealSection zIndex="z-0">
@@ -605,7 +612,7 @@ const App: React.FC = () => {
 
         {/* ========== 3. SERVICES ========== */}
         <StickySection index={3} justify="start" id="services">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-12 md:py-24 pb-16 md:pb-48 flex flex-col justify-center" style={{ minHeight: 'inherit' }}>
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-6 md:py-12 flex flex-col justify-center h-full overflow-y-auto">
             <div className="flex flex-col md:flex-row items-start md:items-baseline justify-between border-b border-white/20 pb-4 md:pb-6 mb-8 md:mb-16 relative z-30 gap-2 md:gap-4">
               <RevealText>
                 <h2 className="text-xl md:text-5xl font-serif text-white">{content.whatIDo.title}</h2>
@@ -644,7 +651,7 @@ const App: React.FC = () => {
 
         {/* ========== 4. PHILOSOPHY ========== */}
         <StickySection index={4} justify="start" id="philosophy">
-          <section className="px-5 md:px-12 w-full max-w-6xl mx-auto relative z-10 py-12 md:py-24 pb-16 md:pb-48 flex flex-col justify-center" style={{ minHeight: 'inherit' }}>
+          <section className="px-5 md:px-12 w-full max-w-6xl mx-auto relative z-10 py-6 md:py-12 flex flex-col justify-center h-full overflow-y-auto">
             <div className="flex flex-col items-center gap-10 md:gap-20">
               <RevealText>
                 <div className="flex flex-col items-center gap-3 md:gap-4">
@@ -678,7 +685,7 @@ const App: React.FC = () => {
 
         {/* ========== 5. PERSPECTIVE ========== */}
         <StickySection index={5} bgColor="#000000" id="perspective">
-          <section className="w-full flex-1 relative overflow-hidden flex items-center justify-center bg-black" style={{ minHeight: 'inherit' }}>
+          <section className="w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
             <div className="absolute inset-0 z-0 bg-black">
               <div className="absolute inset-0 opacity-60">
                 <ParallaxImage src={secondaryImg} className="w-full h-full" />
@@ -708,7 +715,7 @@ const App: React.FC = () => {
 
         {/* ========== 6. SKILLS & VALUES ========== */}
         <StickySection index={6} id="skills">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-12 md:py-24 pb-16 md:pb-48">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-6 md:py-12 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-24 w-full">
               <div>
                 <RevealSection className="border-b-2 border-[#C5A265] mb-5 md:mb-8 pb-3 md:pb-4 flex justify-between items-end">
@@ -748,7 +755,7 @@ const App: React.FC = () => {
 
         {/* ========== 7. PROJECTS ========== */}
         <StickySection index={7} justify="center" id="projects">
-          <div className="w-full min-h-[100dvh] flex flex-col items-center justify-center bg-[#141414] overflow-hidden">
+          <div className="w-full h-full flex flex-col items-center justify-center bg-[#141414]">
             <ProjectShowcase />
             <div className="mt-4 mb-8">
               <Link
@@ -764,7 +771,7 @@ const App: React.FC = () => {
 
         {/* ========== 8. PERSONALITY ========== */}
         <StickySection index={8} id="personality">
-          <section className="px-4 md:px-12 w-full max-w-6xl mx-auto flex items-center justify-center py-12 md:py-24 bg-[#171717]" style={{ minHeight: 'inherit' }}>
+          <section className="px-4 md:px-12 w-full max-w-6xl mx-auto flex items-center justify-center py-6 md:py-12 h-full bg-[#171717]">
             <div className="border border-[#C5A265]/40 bg-[#1a1a1a] p-5 md:p-20 relative w-full">
               <div className="absolute top-0 left-0 w-10 h-10 md:w-20 md:h-20 border-t-2 border-l-2 border-[#C5A265] z-30"></div>
               <div className="absolute bottom-0 right-0 w-10 h-10 md:w-20 md:h-20 border-b-2 border-r-2 border-[#C5A265] z-30"></div>
@@ -794,11 +801,11 @@ const App: React.FC = () => {
         </StickySection>
 
         {/* ========== 9. FOOTER ========== */}
-        <StickySection index={9} justify="between" isLast id="contact">
-          <div className="w-full min-h-[100dvh] flex flex-col justify-between py-12 md:py-24 px-5 md:px-12 bg-[#141414]">
+        <StickySection index={9} justify="between" id="contact">
+          <div className="w-full h-full flex flex-col justify-between py-12 md:py-24 px-5 md:px-12 bg-[#141414]">
             <div className="flex-1 flex flex-col items-center justify-center z-10">
               <RevealSection>
-                <h2 className="text-lg md:text-3xl lg:text-4xl font-serif font-medium leading-relaxed mb-6 md:mb-12 text-white tracking-wide text-center max-w-4xl mx-auto px-2">
+                <h2 className="text-base md:text-2xl lg:text-4xl font-serif font-medium leading-relaxed mb-6 md:mb-12 text-white tracking-wide text-center whitespace-nowrap">
                   {content.copy.main}
                 </h2>
               </RevealSection>
