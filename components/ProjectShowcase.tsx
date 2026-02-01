@@ -265,18 +265,25 @@ export const ImageSlider: React.FC<{ images: string[]; autoPlay?: boolean }> = (
 };
 
 // Shared logic: get top N published projects from Firestore, fallback to defaults
-function getPublishedProjects(webApps: WebApp[], count: number): ProjectDisplay[] {
+// offset: skip the first N projects (used to show different projects in different sections)
+function getPublishedProjects(webApps: WebApp[], count: number, offset: number = 0): ProjectDisplay[] {
     if (webApps.length > 0) {
         const publishedApps = webApps
             .filter(app => app.published)
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, count);
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-        if (publishedApps.length > 0) {
-            return publishedApps.map(webAppToProject);
+        const sliced = publishedApps.slice(offset, offset + count);
+        if (sliced.length > 0) {
+            return sliced.map(webAppToProject);
         }
     }
-    return defaultProjects.slice(0, count);
+    // Fallback: use default projects with offset, wrapping around if needed
+    const defaults = defaultProjects;
+    const result: typeof defaults = [];
+    for (let i = 0; i < count; i++) {
+        result.push(defaults[(offset + i) % defaults.length]);
+    }
+    return result;
 }
 
 // Convert WebApp to display format
@@ -387,10 +394,10 @@ export const CompactProjectCard: React.FC<{ project: ProjectDisplay }> = ({ proj
     );
 };
 
-// Featured Projects for Intro Section (shows 3 most recent from Firestore)
+// Featured Projects for Intro Section (shows 3 projects DIFFERENT from main showcase)
 export const FeaturedProjects: React.FC = () => {
     const { webApps, loading } = useWebApps();
-    const projects = React.useMemo(() => getPublishedProjects(webApps, 3), [webApps]);
+    const projects = React.useMemo(() => getPublishedProjects(webApps, 3, 3), [webApps]);
 
     if (loading) {
         return (
