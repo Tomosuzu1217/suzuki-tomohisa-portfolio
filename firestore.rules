@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // --- WEB APPS COLLECTION ---
+    match /webApps/{docId} {
+      // 読み取りは誰でも可能
+      allow read: if true;
+      // 書き込みは認証済みユーザーのみ
+      // 注意: Firebase Console > Authentication > 設定で許可するメールアドレスを管理
+      allow write: if request.auth != null;
+    }
+    
+    // --- SORA2 VIDEOS COLLECTION ---
+    match /sora2Videos/{docId} {
+      // 読み取りは誰でも可能
+      allow read: if true;
+      // 書き込みは認証済みユーザーのみ
+      allow write: if request.auth != null;
+    }
+    
+    // --- SITE CONTENT COLLECTION ---
+    match /siteContent/{docId} {
+      // 読み取りは誰でも可能
+      allow read: if true;
+      // 書き込みは認証済みユーザーのみ
+      allow write: if request.auth != null;
+    }
+  }
+}
