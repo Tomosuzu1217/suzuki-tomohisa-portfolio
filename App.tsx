@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'framer-motion';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence, useInView } from 'framer-motion';
 import { WaterBackground, WaterBackgroundHero } from './components/WaterBackground';
 import { AdminEditor } from './components/AdminEditor';
 import { LiquidText } from './components/LiquidText';
@@ -83,6 +83,261 @@ const ParallaxImage: React.FC<{ src: string; alt?: string; className?: string }>
 
       {/* Frame */}
       <div className="absolute inset-4 border border-[#C5A265]/20 pointer-events-none z-20 group-hover:border-[#C5A265]/60 transition-colors duration-300"></div>
+    </div>
+  );
+};
+
+// --- SCROLL PROGRESS BAR ---
+const ScrollProgressBar: React.FC = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  return (
+    <div className="fixed right-6 md:right-12 top-0 bottom-0 w-[1px] z-40 pointer-events-none hidden md:block">
+      <div className="h-full w-full bg-white/5" />
+      <motion.div
+        className="absolute top-0 left-0 w-full bg-[#C5A265] origin-top"
+        style={{ scaleY, height: '100%' }}
+      />
+      <motion.div
+        className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-[#C5A265] rounded-full shadow-[0_0_12px_rgba(197,162,101,0.8)]"
+        style={{ top: useTransform(scaleY, v => `${v * 100}%`) }}
+      />
+    </div>
+  );
+};
+
+// --- SECTION INDICATOR ---
+const SECTION_NAMES = ['HERO', 'ABOUT', 'SERVICES', 'PHILOSOPHY', 'PERSPECTIVE', 'SKILLS', 'PROJECTS', 'PERSONALITY', 'CONTACT'];
+
+const SectionIndicator: React.FC = () => {
+  const [activeSection, setActiveSection] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const vh = window.innerHeight;
+      const scrollY = window.scrollY;
+      const section = Math.min(Math.floor(scrollY / vh), SECTION_NAMES.length - 1);
+      setActiveSection(Math.max(0, section));
+    };
+
+    let ticking = false;
+    const throttled = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttled, { passive: true });
+    return () => window.removeEventListener('scroll', throttled);
+  }, []);
+
+  return (
+    <div className="fixed bottom-8 right-6 md:right-20 z-40 pointer-events-none hidden md:flex flex-col items-end gap-2 mix-blend-difference">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={activeSection}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.3 }}
+          className="text-[10px] font-mono tracking-[0.3em] text-[#C5A265]"
+        >
+          {SECTION_NAMES[activeSection]}
+        </motion.span>
+      </AnimatePresence>
+      <span className="text-[10px] font-mono tracking-widest text-white/40">
+        <span className="text-[#C5A265]">{String(activeSection + 1).padStart(2, '0')}</span>
+        <span className="mx-1">/</span>
+        {String(SECTION_NAMES.length).padStart(2, '0')}
+      </span>
+    </div>
+  );
+};
+
+// --- MAGNETIC BUTTON ---
+const MagneticButton: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void; as?: 'button' | 'div' }> = ({
+  children, className = '', onClick, as: Tag = 'button'
+}) => {
+  const ref = useRef<HTMLElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 150, damping: 15 });
+  const springY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set((e.clientX - centerX) * 0.3);
+    y.set((e.clientY - centerY) * 0.3);
+  }, [x, y]);
+
+  const handleMouseLeave = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
+
+  return (
+    <motion.div
+      ref={ref as React.RefObject<HTMLDivElement>}
+      style={{ x: springX, y: springY }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Tag onClick={onClick} className={className}>
+        {children}
+      </Tag>
+    </motion.div>
+  );
+};
+
+// --- FLOATING GOLD PARTICLES ---
+const FloatingParticles: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let animationId: number;
+    const particles: { x: number; y: number; size: number; speedY: number; speedX: number; opacity: number; life: number; maxLife: number }[] = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const createParticle = () => {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height + 10,
+        size: Math.random() * 1.5 + 0.5,
+        speedY: -(Math.random() * 0.3 + 0.1),
+        speedX: (Math.random() - 0.5) * 0.2,
+        opacity: 0,
+        life: 0,
+        maxLife: Math.random() * 600 + 300
+      });
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Add new particle occasionally
+      if (particles.length < 40 && Math.random() < 0.03) {
+        createParticle();
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life++;
+        p.x += p.speedX + Math.sin(p.life * 0.01) * 0.1;
+        p.y += p.speedY;
+
+        // Fade in and out
+        const lifeRatio = p.life / p.maxLife;
+        if (lifeRatio < 0.1) {
+          p.opacity = lifeRatio / 0.1;
+        } else if (lifeRatio > 0.8) {
+          p.opacity = (1 - lifeRatio) / 0.2;
+        } else {
+          p.opacity = 1;
+        }
+
+        // Remove dead particles
+        if (p.life >= p.maxLife || p.y < -10) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(197, 162, 101, ${p.opacity * 0.15})`;
+        ctx.fill();
+
+        // Glow effect
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(197, 162, 101, ${p.opacity * 0.03})`;
+        ctx.fill();
+      }
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-[5] pointer-events-none"
+      style={{ mixBlendMode: 'screen' }}
+    />
+  );
+};
+
+// --- SPLIT TEXT CHARACTER ANIMATION ---
+const SplitTextReveal: React.FC<{ text: string; className?: string; delay?: number }> = ({ text, className = '', delay = 0 }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-10%" });
+
+  return (
+    <div ref={ref} className={`inline-flex flex-wrap ${className}`}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={`${char}-${i}`}
+          initial={{ opacity: 0, y: 40, rotateX: -90 }}
+          animate={isInView ? { opacity: 1, y: 0, rotateX: 0 } : { opacity: 0, y: 40, rotateX: -90 }}
+          transition={{
+            duration: 0.5,
+            delay: delay + i * 0.04,
+            ease: [0.16, 1, 0.3, 1]
+          }}
+          className="inline-block"
+          style={{ perspective: '500px' }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </div>
+  );
+};
+
+// --- HORIZONTAL SCROLL TEXT MARQUEE ---
+const MarqueeText: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
+  return (
+    <div className={`overflow-hidden whitespace-nowrap ${className}`}>
+      <motion.div
+        className="inline-flex gap-16"
+        animate={{ x: ['0%', '-50%'] }}
+        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+      >
+        {[...Array(4)].map((_, i) => (
+          <span key={i} className="text-[8vw] font-serif text-white/[0.02] tracking-widest select-none">
+            {text}
+          </span>
+        ))}
+      </motion.div>
     </div>
   );
 };
@@ -256,6 +511,9 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       <WaterBackground />
+      <FloatingParticles />
+      <ScrollProgressBar />
+      <SectionIndicator />
 
       {/* Spotlight & Overlays */}
       <div
@@ -326,7 +584,7 @@ const App: React.FC = () => {
                   className="absolute w-full z-10"
                 >
                   <LiquidText as="div" className="text-4xl md:text-6xl lg:text-7xl font-serif tracking-tight text-[#e5e5e5] leading-none">
-                    {nameVariations[nameIndex]}
+                    <SplitTextReveal text={nameVariations[nameIndex]} delay={0} />
                   </LiquidText>
                 </motion.div>
               </AnimatePresence>
@@ -348,7 +606,13 @@ const App: React.FC = () => {
               className="absolute bottom-12 right-6 md:right-12 flex flex-col items-center gap-4 z-30"
             >
               <span className="text-[10px] tracking-widest text-[#C5A265]">SCROLL</span>
-              <div className="h-16 w-[1px] bg-[#C5A265]"></div>
+              <div className="h-16 w-[1px] bg-[#C5A265]/30 relative overflow-hidden">
+                <motion.div
+                  className="absolute top-0 left-0 w-full bg-[#C5A265]"
+                  animate={{ height: ['0%', '100%'], opacity: [1, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              </div>
             </motion.div>
           </section>
         </StickySection>
@@ -430,6 +694,8 @@ const App: React.FC = () => {
                     <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0 duration-500 text-[#C5A265]">
                       <ArrowDown className="-rotate-90" size={24} />
                     </div>
+                    {/* Hover accent line */}
+                    <div className="absolute bottom-0 left-0 h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-[#C5A265] to-transparent transition-all duration-700 ease-out" />
                   </div>
                 </RevealSection>
               ))}
@@ -486,6 +752,10 @@ const App: React.FC = () => {
               <div className="absolute inset-0 opacity-60">
                 <ParallaxImage src={secondaryImg} className="w-full h-full" />
               </div>
+            </div>
+            {/* Background Marquee */}
+            <div className="absolute inset-0 z-10 flex items-center overflow-hidden pointer-events-none">
+              <MarqueeText text="DATA SCIENCE   DECISION DESIGN   ANALYSIS   STRATEGY" />
             </div>
             <div className="relative z-30">
               <RevealSection>
@@ -590,18 +860,20 @@ const App: React.FC = () => {
 
               <RevealSection delay={0.2}>
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
-                  <button
+                  <MagneticButton
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="group relative px-6 md:px-8 py-3 md:py-4 border border-[#C5A265] text-[#C5A265] text-xs tracking-[0.2em] hover:bg-[#C5A265] hover:text-black transition-all duration-500"
+                    className="group relative px-6 md:px-8 py-3 md:py-4 border border-[#C5A265] text-[#C5A265] text-xs tracking-[0.2em] hover:bg-[#C5A265] hover:text-black transition-all duration-500 cursor-none"
                   >
                     BACK TO TOP
-                  </button>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 border border-white/30 text-white/70 text-xs tracking-[0.2em] hover:border-[#C5A265] hover:text-[#C5A265] transition-all duration-500"
-                  >
-                    <LayoutDashboard size={14} /> DASHBOARD
-                  </Link>
+                  </MagneticButton>
+                  <MagneticButton as="div" className="cursor-none">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 border border-white/30 text-white/70 text-xs tracking-[0.2em] hover:border-[#C5A265] hover:text-[#C5A265] transition-all duration-500"
+                    >
+                      <LayoutDashboard size={14} /> DASHBOARD
+                    </Link>
+                  </MagneticButton>
                 </div>
               </RevealSection>
             </div>
