@@ -65,15 +65,17 @@ const ParallaxImage: React.FC<{ src: string; alt?: string; className?: string }>
         <img
           src={src}
           alt={alt}
+          decoding="async"
+          loading="eager"
           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 ease-out"
         />
       </motion.div>
       <div className="absolute inset-0 opacity-0 group-hover:opacity-60 mix-blend-screen pointer-events-none transition-opacity duration-100">
         <motion.div style={{ y, scale: scaleRed, height: "125%" }} className="absolute inset-0 translate-x-1">
-          <img src={src} alt="" className="w-full h-full object-cover sepia hue-rotate-[-50deg] contrast-150 opacity-50" />
+          <img src={src} alt="" decoding="async" loading="lazy" className="w-full h-full object-cover sepia hue-rotate-[-50deg] contrast-150 opacity-50" />
         </motion.div>
         <motion.div style={{ y, scale: scaleBlue, height: "125%" }} className="absolute inset-0 -translate-x-1">
-          <img src={src} alt="" className="w-full h-full object-cover sepia hue-rotate-[50deg] contrast-150 opacity-50" />
+          <img src={src} alt="" decoding="async" loading="lazy" className="w-full h-full object-cover sepia hue-rotate-[50deg] contrast-150 opacity-50" />
         </motion.div>
       </div>
       <div className="absolute inset-0 opacity-20 mix-blend-overlay group-hover:opacity-40 transition-opacity pointer-events-none"
@@ -570,8 +572,8 @@ const App: React.FC = () => {
 
         {/* ========== 2. INTRO / ABOUT ========== */}
         <StickySection index={2} id="about">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-8 md:py-12">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-16 items-center w-full">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-6 md:py-10">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-12 items-center w-full">
               <div className="md:col-span-6 relative">
                 <RevealSection zIndex="z-0">
                   <div className="aspect-[3/4] md:aspect-[4/5] w-full max-w-sm md:max-w-none mx-auto relative border border-[#C5A265]/30 p-1.5 md:p-2">
@@ -724,7 +726,7 @@ const App: React.FC = () => {
 
         {/* ========== 6. SKILLS & VALUES ========== */}
         <StickySection index={6} id="skills">
-          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 flex items-center py-8 md:py-16">
+          <section className="px-5 md:px-12 w-full max-w-7xl mx-auto md:pl-24 py-8 md:py-16">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 w-full">
               <div>
                 <RevealSection className="border-b-2 border-[#C5A265] mb-5 md:mb-8 pb-3 md:pb-4 flex justify-between items-end">
@@ -787,7 +789,7 @@ const App: React.FC = () => {
 
               <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-12 items-center">
                 <RevealSection zIndex="z-0" className="w-28 h-28 md:w-56 md:h-56 shrink-0 border-4 border-[#2a2a2a] shadow-2xl">
-                  <img src={tertiaryImg} alt="" className="w-full h-full object-cover grayscale contrast-125" />
+                  <img src={tertiaryImg} alt="" decoding="async" loading="lazy" className="w-full h-full object-cover grayscale contrast-125" />
                 </RevealSection>
 
                 <div className="flex-1 text-center md:text-left">

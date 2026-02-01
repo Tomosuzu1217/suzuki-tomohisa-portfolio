@@ -145,7 +145,7 @@ export const defaultProjects = [
 const LazyImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className = '' }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(false);
-    const imgRef = useRef<HTMLImageElement>(null);
+    const imgRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -155,7 +155,7 @@ const LazyImage: React.FC<{ src: string; alt: string; className?: string }> = ({
                     observer.disconnect();
                 }
             },
-            { rootMargin: '200px' }
+            { rootMargin: '600px' }
         );
 
         if (imgRef.current) {
@@ -169,7 +169,7 @@ const LazyImage: React.FC<{ src: string; alt: string; className?: string }> = ({
         <div ref={imgRef} className={`relative ${className}`}>
             {!isLoaded && (
                 <div className="absolute inset-0 bg-[#1a1a1a] animate-pulse flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-[#C5A265] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-2 border-[#C5A265] border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
             {isInView && (
@@ -177,8 +177,9 @@ const LazyImage: React.FC<{ src: string; alt: string; className?: string }> = ({
                     src={src}
                     alt={alt}
                     loading="lazy"
+                    decoding="async"
                     onLoad={() => setIsLoaded(true)}
-                    className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                 />
             )}
         </div>
