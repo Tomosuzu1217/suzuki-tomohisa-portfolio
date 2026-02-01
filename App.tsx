@@ -331,7 +331,7 @@ const CARD_COLORS = [
   '#161616', '#141414', '#171717', '#141414',
 ];
 
-const CARD_OFFSET = 32;
+const CARD_OFFSET = 8;
 
 const StickySection: React.FC<StickySectionProps> = ({
   children, className = "", index, justify = 'center',
@@ -352,7 +352,7 @@ const StickySection: React.FC<StickySectionProps> = ({
       id={id}
       className={`${isLast ? 'relative' : 'sticky'} isolate w-full flex flex-col ${justifyClass} ${className}`}
       style={{
-        zIndex: index * 10 + 10,
+        zIndex: index + 1,
         backgroundColor: bg,
         top: isLast ? 'auto' : `${offset}px`,
         minHeight: isLast ? '100dvh' : `calc(100dvh - ${offset}px)`,
@@ -363,14 +363,8 @@ const StickySection: React.FC<StickySectionProps> = ({
         style={{ backgroundImage: `url("${NOISE_TEXTURE_SVG}")` }}
       />
       <div className="absolute top-0 left-0 w-full z-50 pointer-events-none">
-        <div className="h-[1px] w-full bg-[#C5A265]/40" />
-        <div className="h-8 w-full bg-gradient-to-b from-white/[0.03] to-transparent" />
+        <div className="h-[1px] w-full bg-[#C5A265]/50" />
       </div>
-      {!isLast && (
-        <div className="absolute top-1.5 right-3 md:right-6 text-[8px] font-mono tracking-[0.3em] text-[#C5A265]/60 z-50 select-none">
-          {String(index).padStart(2, '0')}
-        </div>
-      )}
       {children}
     </div>
   );
@@ -393,14 +387,17 @@ const App: React.FC = () => {
   ], [content.hero.nameJa, content.hero.nameEn]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const isHeroVisible = useInView(heroRef, { amount: 0.3 });
   useCursorTracker(containerRef);
 
   useEffect(() => {
+    if (!isHeroVisible) return;
     const interval = setInterval(() => {
       setNameIndex(prev => (prev + 1) % nameVariations.length);
     }, 3500);
     return () => clearInterval(interval);
-  }, [nameVariations.length]);
+  }, [nameVariations.length, isHeroVisible]);
 
   useEffect(() => {
     const saved = localStorage.getItem('suzuki_portfolio_content');
@@ -501,7 +498,7 @@ const App: React.FC = () => {
 
         {/* ========== 1. HERO ========== */}
         <StickySection index={1} className="pt-20 pb-8 md:py-24" id="hero">
-          <section className="px-5 md:px-12 max-w-7xl mx-auto w-full md:pl-32 pb-16 md:pb-24">
+          <section ref={heroRef} className="px-5 md:px-12 max-w-7xl mx-auto w-full md:pl-32 pb-16 md:pb-24">
             <RevealText delay={0.4}>
               <p className="font-serif text-sm md:text-base text-[#C5A265] tracking-wide mb-4 md:mb-6">
                 {content.hero.subtitle}
